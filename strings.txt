@@ -1,0 +1,665 @@
+Healthcare Deep Analytics
+wide
+
+<style>
+/* 1. OVERALL THEME & BACKGROUND */
+.stApp { background-color: #F7FBFF; }
+.stApp > header { background-color: transparent !important; }
+
+/* 2. TEXT & HEADERS */
+h1 {
+    color: #16324F !important;
+    background: #FFFFFF;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-bottom: 5px solid #1976D2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    margin-bottom: 2rem !important;
+}
+h2, h3 {
+    color: #16324F !important;
+    border-left: 5px solid #1976D2;
+    padding-left: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    background-color: #FFFFFF;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
+}
+.stMarkdown p, .stText { color: #607D8B !important; }
+
+/* 3. SIDEBAR STYLING */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #D6E7F2;
+}
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 1rem !important;
+    color: #1976D2 !important;
+}
+[data-testid="stSidebar"] label {
+    color: #16324F !important;
+    font-weight: 600;
+}
+/* MultiSelect Chips and Dropdowns (Removing Black Artifacts) */
+span[data-baseweb="tag"] {
+    background-color: #E3F2FD !important;
+    border: 1px solid #90CAF9 !important;
+}
+span[data-baseweb="tag"] span {
+    color: #1565C0 !important;
+}
+div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    border-radius: 8px !important;
+    border: 1px solid #D6E7F2 !important;
+    color: #16324F !important;
+}
+div[data-baseweb="popover"] > div {
+    background-color: #FFFFFF !important;
+    color: #16324F !important;
+}
+li[role="option"] {
+    color: #16324F !important;
+}
+
+/* 4. KPI CARDS  */
+[data-testid="stMetric"] {
+    background-color: #FFFFFF;
+    border: 1px solid #D6E7F2;
+    border-radius: 10px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+    border-top: 4px solid #1976D2;
+}
+[data-testid="stMetricValue"] {
+    color: #16324F !important;
+    font-weight: 700;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-wrap: break-word !important;
+}
+[data-testid="stMetricLabel"] {
+    color: #607D8B !important;
+    font-size: 1rem;
+    font-weight: 600;
+}
+[data-testid="column"]:nth-child(4) [data-testid="stMetric"] { border-top-color: #00897B; }
+[data-testid="column"]:nth-child(7) [data-testid="stMetric"] { border-top-color: #00897B; }
+
+/* 5. BUTTONS */
+button[data-testid="baseButton-secondary"] {
+    background-color: #FFFFFF !important;
+    border: 1px solid #1976D2 !important;
+    color: #1976D2 !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+button[data-testid="baseButton-secondary"]:hover {
+    background-color: #E3F2FD !important;
+    color: #1565C0 !important;
+    border-color: #1565C0 !important;
+}
+button[data-testid="baseButton-primary"] {
+    background-color: #1976D2 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+button[data-testid="baseButton-primary"]:hover {
+    background-color: #1565C0 !important;
+}
+
+/* 6. EXPANDERS & TABS */
+.st-emotion-cache-1n76uvr, [data-testid="stExpander"] { 
+    background-color: #FFFFFF !important;
+    border: 1px solid #D6E7F2 !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+    color: #1976D2 !important;
+    border-bottom-color: #1976D2 !important;
+    background-color: #E3F2FD !important;
+    border-radius: 8px 8px 0 0;
+}
+.stTabs [data-baseweb="tab-list"] button {
+    color: #607D8B !important;
+    font-weight: 600;
+}
+
+/* 7. INFO BLOCKS */
+.stAlert {
+    background-color: #E3F2FD !important;
+    color: #1565C0 !important;
+    border-left: 4px solid #1976D2 !important;
+}
+</style>
+
+#1976D2
+plotly_white
+healthcare
+#16324F
+rgba(0,0,0,0)
+data/cleaned/master_patient_health.csv
+admit_date
+year
+age
+age_group
+current_page
+dashboard
+← Back to Dashboard
+dashboard
+---
+🔎 Global Filters
+Year
+year
+Admit Type
+admit_type
+Ward Type
+ward_type
+Discharge Type
+discharge_type
+Tier
+tier
+Insurance
+insurance_type
+Gender
+gender
+Disease Category
+primary_category
+total ascending
+group
+count
+🏥 Patient Health Record Analytics Dashboard
+### Executive Overview
+Admissions
+Patients
+patient_id
+Hospitals
+hospital_id
+Avg LOS
+los_days
+.2f
+Avg Cost
+total_cost_inr
+,.0f
+Avg OOP
+out_of_pocket_inr
+Avg Subsidy
+govt_subsidy_inr
+---
+count
+Trend by Year
+#FFFFFF
+#F7FBFF
+#D6E7F2
+<div style="background-color: #FFFFFF; border: 1px solid #D6E7F2; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 5px;">
+</div>
+Cost by Year
+Average Cost (₹)
+---
+primary_category
+count
+Top Categories
+🏥 Clinical Analytics
+Clinical Drill Down →
+clin
+gender
+count
+Gender Summary
+👥 Demographics Analytics
+Demographic Drill Down →
+demo
+tier
+total_cost_inr
+Avg Cost by Tier
+💰 Financial Analytics
+Financial Drill Down →
+fin
+name
+count
+Top Hospitals
+🏨 Hospital Analytics
+Hospital Drill Down →
+hosp
+admit_type
+count
+Admit Types
+🚑 Admission Analytics
+Admission Drill Down →
+adm
+discharge_type
+count
+Outcomes
+📋 Outcome Analytics
+Outcome Drill Down →
+out
+**Classification & Regression Models**
+🤖 Predictive Analytics
+Predictive Analytics →
+predictive
+**Key findings from the patient health dataset**
+💡 Key Insights
+View Key Insights →
+insights
+🔬 Clinical Drill-Down Analysis
+.1f
+Avg Comorbidity
+comorbidity_count
+Avg Procedures
+num_procedures
+Avg Diagnoses
+num_diagnoses
+B. Disease Distribution
+1. Adms by Category
+primary_diagnosis
+2. Top 10 Diagnoses
+3. Category vs Avg LOS
+4. Category vs Avg Cost
+5. Category vs Outcome
+C. Patient Characteristics
+6. Age Grp by Category
+age_group
+7. Gender by Category
+8. Comorbidity Dist
+9. Comorbidity vs Avg LOS
+10. Comorbidity vs Avg Cost
+D. Care / Ward Analysis
+11. Adms by Ward
+12. Ward vs Category
+13. Ward vs Avg LOS
+14. Ward vs Avg Cost
+15. Ward vs Outcome
+16. Ward vs Avg Procs
+E. Admission Pattern Analysis
+17. Admit Type Dist
+18. Admit Type vs Category
+19. Admit Type vs Ward
+20. Admit Type vs Avg LOS
+21. Admit Type vs Avg Cost
+F. Treatment Intensity
+22. LOS Dist
+23. Proc Dist
+24. Diagnoses Dist
+25. LOS vs Total Cost
+26. Procs vs Total Cost
+27. Comorb vs LOS
+28. Comorb vs Cost
+G. Clinical Outcome Analysis
+29. Outcome Dist
+30. Outcome by Ward
+31. Outcome by Category
+32. Outcome by Age
+33. Avg LOS by Outcome
+34. Avg Cost by Outcome
+H. Clinical Financial Relationship
+35. Category vs Avg Cost
+36. Ward vs Avg Cost
+37. LOS vs Cost
+38. Comorb vs Cost
+39. Procs vs Cost
+No records.
+👥 Demographic Drill-Down Analysis
+All
+Age
+Category
+Ward
+Avg Age
+age
+Avg Comorb
+Population Structure
+Age Grp
+Gender × Age Grp
+Clinical & Outcomes & Financial
+Age Grp × Disease
+Gender × Ward
+Age Grp × LOS
+Age Grp × Cost
+Gender × OOP
+💰 Financial Drill-Down Analysis
+Cost Distribution
+Total Cost Dist
+OOP Dist
+Subsidy Dist
+cost_category
+Cost Category
+Insurance Analysis
+Insurance Dist
+Ins × Avg Cost
+Ins × Ward
+BPL & Cost Drivers
+bpl_card
+BPL × Avg Cost
+Disease × Avg Cost
+Procedures × Cost
+🏨 Hospital Drill-Down Analysis
+Hospital
+name
+Hospital Structure
+Adms by Tier
+Adms by Hospital
+Resource & Clinical
+Hospital × Avg LOS
+Tier × Disease
+Outcomes
+Financial
+Hospital × Avg Cost
+Tier × Avg OOP
+🚑 Admission Pattern Drill-Down
+Admission Type
+Admit Type Dist
+Admit Type × Ward
+Admit Type × Disease
+Temporal Analysis
+Admissions by Year
+Avg Cost by Year
+Admit Type by Year
+Clinical Intensity
+Admit Type × LOS
+Admit Type × Cost
+📋 Outcome Drill-Down Analysis
+Outcome Distribution
+Outcome Dist
+Outcome by Ward
+Outcome by Age Grp
+Clinical & Financial Factors
+Outcome × Total Cost
+All model evaluations and visualizations are performed strictly on a 20% holdout test set to ensure valid generalization metrics.
+📊 Classification (High-Cost Admission)
+📈 Regression (Length of Stay)
+This classification model estimates whether an admission belongs to the high-cost group based on patient, clinical, admission, insurance, and hospital characteristics available in the dataset. The high-cost threshold is defined using the 95th percentile of total treatment cost.
+Important: Cost variables used to define the target (e.g. total_cost_inr) are explicitly excluded from inputs to prevent target leakage.
+total_cost_inr
+high_cost
+num
+cat
+ignore
+balanced
+Logistic Regression
+Random Forest
+Feature
+Importance
+Training classification models...
+Class Distribution
+Total Admissions
+High-Cost Admissions
+Normal-Cost Admissions
+High-Cost Percentage
+High-Cost Threshold
+,.2f
+Class
+Normal Cost
+Count
+High Cost
+Normal-Cost Admissions vs High-Cost Admissions
+Model Comparison
+{:.3f}
+Confusion Matrices
+Actual Normal
+Actual High Cost
+Predicted Normal
+Predicted High Cost
+Predicted Class
+Actual Class
+Logistic Regression
+Blues
+Random Forest
+Greens
+ROC Curves
+Logistic Regression — AUC = 
+.3f
+False Positive Rate
+True Positive Rate
+line
+dash
+Random Forest — AUC = 
+Feature Importance
+Importance
+Feature
+Model Feature Importance
+total ascending
+🔮 Interactive High-Cost Prediction
+Enter patient characteristics to predict high-cost likelihood:
+c_age
+Comorbidities
+c_com
+Prev Admissions
+c_prev
+Procedures
+c_proc
+Diagnoses
+c_diag
+Hospital Beds
+c_beds
+c_gen
+c_ward
+c_adm
+c_cat
+c_ins
+BPL Card
+c_bpl
+Hospital Tier
+c_tier
+Teaching Hospital
+teaching
+c_teach
+Predict High-Cost Classification
+prev_admissions
+⚠️ High-Cost Admission Predicted! (Probability: 
+✅ Normal Cost Admission Predicted (High-Cost Probability: 
+This regression model estimates the expected length of hospital stay from patient, clinical, admission, and hospital characteristics available in the dataset. The prediction represents a statistical estimate based on historical data and is not a clinical decision-making tool.
+Important: Discharge information, LOS itself, and cost variables are excluded from the predictor set to prevent target leakage.
+### ⚠️ Model Limitation
+- Predictions are based on historical dataset patterns.
+- Actual LOS can be affected by factors not present in the dataset.
+- Model performance should be interpreted using MAE, RMSE, and R² together.
+- Model feature importance does not establish causality.
+- This is an analytics demonstration, not a clinical decision system.
+los_days
+admit_date
+admission_year
+admission_month
+num
+cat
+ignore
+Linear Regression
+Random Forest
+Feature
+Importance
+Training regression models...
+Avg Actual LOS
+ days
+Avg Predicted LOS
+MAE (RF)
+RMSE (RF)
+R² (RF)
+Actual vs Predicted
+Actual LOS
+Predicted LOS
+Linear Regression
+red
+Residual Analysis & Error Distribution
+Residual (Actual - Predicted)
+Random Forest Residuals
+Prediction Error Distribution (Random Forest)
+value
+Error (Actual - Predicted)
+Model Feature Importance — LOS Regression
+🔮 Predict Length of Stay
+Enter patient characteristics to predict expected length of stay:
+Age (LOS)
+r_age
+Comorbidities (LOS)
+r_com
+Prev Admissions (LOS)
+r_prev
+Procedures (LOS)
+r_proc
+Diagnoses (LOS)
+r_diag
+Hospital Beds (LOS)
+r_beds
+Gender 
+r_gen
+Ward Type 
+r_ward
+Admit Type 
+r_adm
+Disease Category 
+r_cat
+Insurance 
+r_ins
+BPL Card 
+r_bpl
+Hospital Tier 
+r_tier
+Teaching Hospital 
+r_teach
+Predict Expected LOS
+**Estimated Length of Stay:** 
+💡 Key Insights & Findings
+This page summarizes the most important findings discovered through EDA, analytics, classification, and regression.
+📊 Dataset Overview
+Unique Patients
+Average LOS
+Average Age
+ years
+Average Cost
+🔬 Clinical Findings
+**Admission Pattern**
+Emergency admissions are the largest admission type:
+ = 
+**Ward Distribution**
+General ward contains the largest number of admissions:
+**Disease Distribution**
+The largest primary disease categories include:
+**Clinical Complexity**
+Average values:
+- LOS ≈ 
+ days
+- Comorbidity ≈ 
+
+- Procedures ≈ 
+
+- Previous Admissions ≈ 
+👥 Demographic Findings
+**Age Distribution**
+Highlight: The 41–60 group has the largest admission count in this dataset.
+**Gender**
+**Comorbidity**
+The distribution is primarily spread across 0 to 3 comorbidities.
+Note: Age, gender, and comorbidity counts are descriptive and do not imply direct causation of outcomes.
+🩺 Diagnosis Findings
+**Top High-Frequency Diagnoses**
+**Highest Average LOS/Cost Disease Categories**
+- **
+:** Average LOS ≈ 
+, Average Cost ≈ ₹
+Clearly stating: These are descriptive dataset observations.
+💰 Financial Findings
+**Overall Cost**
+- Average Total Cost: ₹
+- Average Government Subsidy: ₹
+- Average OOP: ₹
+**Cost Distribution**
+- Median Cost: ₹
+- Q
+: ₹
+- Maximum: ₹
+A relatively small number of admissions have substantially higher treatment costs.
+🏥 Ward-Based Financial Findings
+**: Avg LOS = 
+, Avg Cost = ₹
+In this dataset, ICU and NICU admissions show higher average LOS and treatment costs than General and HDU admissions.
+🏨 Hospital Findings
+nunique
+mean
+**
+- Hospitals: 
+
+- Admissions: 
+
+- Average LOS: 
+
+- Average Cost: ₹
+Average LOS is very similar across hospital tiers in this dataset, while average treatment cost differs substantially.
+🛡️ Insurance & Financial Coverage
+**: Avg Cost: ₹
+ | Avg OOP: ₹
+ | Subsidy Coverage: 
+The Unknown category represents missing insurance information, so its zero recorded subsidy should not be interpreted as the performance of an insurance scheme.
+high_cost
+🚨 High-Cost Admission Analysis
+- **95th percentile threshold** = ₹
+- **High-cost definition** = total_cost_inr >= ₹
+- **High-cost admissions** = 
+ / 120,000
+- **High-cost percentage** = 
+The high-cost group is defined using the 95th percentile of treatment cost. Admissions at or above ₹
+ are classified as high-cost.
+**🚨 High-Cost Group Characteristics**
+Average LOS ≈ 
+**Ward composition:**
+**Disease-category composition:**
+Among admissions classified as high-cost, ICU admissions and cardiovascular cases represent substantial shares of the group.
+🔄 Patient Utilization
+- Unique Patients: 
+- Single-Admission Patients: 
+- Repeat Patients: 
+- Repeat-Patient Rate: 
+- Maximum Admissions for One Patient = 
+- Average Admissions per Patient ≈ 
+More than half of unique patients in this dataset have more than one recorded admission.
+📈 Relationships
+- LOS vs Total Cost: r = 
+.4f
+- Comorbidity vs Total Cost: r = 
+- Comorbidity vs LOS: r = 
+LOS and total treatment cost show a moderate positive correlation in this dataset.
+
+Correlation does not establish causation.
+📋 Outcome Findings
+🤖 Predictive Modeling Findings
+### Classification
+**Logistic Regression**
+- Accuracy: 0.9272
+- Precision: 0.4037
+- Recall: 0.9575
+- F1: 0.5680
+- ROC-AUC: 0.9847
+**Random Forest**
+- Accuracy: 0.9305
+- Precision: 0.4141
+- Recall: 0.9375
+- F1: 0.5744
+- ROC-AUC: 0.9825
+The classification models achieve high recall on the minority high-cost class, while precision is lower, reflecting the trade-off created by the imbalanced 5% target group.
+### Regression
+**Linear Regression**
+- MAE = 2.5894 days
+- RMSE = 3.8043 days
+- R² = 0.5539
+**Random Forest**
+- MAE = 2.5477 days
+- RMSE = 3.7715 days
+- R² = 0.5615
+Both models provide measurable predictive performance for LOS, with the Random Forest showing slightly lower MAE and RMSE and a slightly higher R² on the current test split.
+⚠️ Limitations
+1. The dataset is a historical hospital dataset and reflects only the variables available in it.
+2. Missing insurance values were retained as `Unknown`; they were not artificially inferred.
+3. Extreme healthcare costs and LOS values were retained because they may represent legitimate clinical cases.
+4. Correlation does not establish causation.
+5. Classification uses a dataset-derived 95th-percentile threshold.
+6. Classification performance is affected by the approximately 5% high-cost class imbalance.
+7. Regression predictions cannot capture factors absent from the dataset.
+8. The ML models are analytical demonstrations and are not clinical decision-making systems.
+🎯 Project Summary
+The Patient Health Record Analytics & Monitoring Dashboard integrates data preprocessing, exploratory analysis, multi-dimensional drill-down analytics, financial and hospital analysis, and predictive modeling. The system enables users to move from high-level healthcare indicators to detailed clinical, demographic, financial, hospital, admission, and outcome analysis, followed by classification and regression modeling.

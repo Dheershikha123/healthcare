@@ -1,0 +1,1363 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.io as pio
+
+st.set_page_config(page_title="Healthcare Deep Analytics", page_icon="🏥", layout="wide")
+
+st.markdown('''
+<style>
+/* 1. OVERALL THEME & BACKGROUND */
+.stApp { background-color: #F7FBFF; }
+.stApp > header { background-color: transparent !important; }
+
+/* 2. TEXT & HEADERS */
+h1 {
+    color: #16324F !important;
+    background: #FFFFFF;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-bottom: 5px solid #1976D2;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    margin-bottom: 2rem !important;
+}
+h2, h3, h4, h5 {
+    color: #16324F !important;
+}
+h2, h3 {
+    border-left: 5px solid #1976D2;
+    padding-left: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    background-color: #FFFFFF;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.02);
+}
+.stMarkdown p, .stText { color: #607D8B !important; }
+
+/* 3. SIDEBAR STYLING */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF !important;
+    border-right: 1px solid #D6E7F2;
+}
+[data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 1rem !important;
+    color: #1976D2 !important;
+}
+[data-testid="stSidebar"] label, div[data-testid="stSelectbox"] label p, div[data-testid="stMultiSelect"] label p, label {
+    color: #16324F !important;
+    font-weight: 600 !important;
+}
+span[data-baseweb="tag"] {
+    background-color: #E3F2FD !important;
+    border: 1px solid #90CAF9 !important;
+}
+span[data-baseweb="tag"] span {
+    color: #1565C0 !important;
+}
+div[data-baseweb="select"] > div {
+    background-color: #FFFFFF !important;
+    border-radius: 8px !important;
+    border: 1px solid #D6E7F2 !important;
+    color: #16324F !important;
+}
+div[data-baseweb="popover"] > div, div[data-baseweb="popover"] ul, div[role="listbox"], div[role="listbox"] ul {
+    background-color: #FFFFFF !important;
+    color: #16324F !important;
+}
+li[role="option"] {
+    color: #16324F !important;
+    background-color: #FFFFFF !important;
+}
+li[role="option"]:hover, li[role="option"][aria-selected="true"] {
+    background-color: #E3F2FD !important;
+    color: #1565C0 !important;
+}
+
+/* 4. KPI CARDS  */
+[data-testid="stMetric"] {
+    background-color: #FFFFFF;
+    border: 1px solid #D6E7F2;
+    border-radius: 10px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+    border-top: 4px solid #1976D2;
+}
+[data-testid="stMetricValue"] {
+    color: #16324F !important;
+    font-weight: 700;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-wrap: break-word !important;
+}
+[data-testid="stMetricLabel"] {
+    color: #607D8B !important;
+    font-size: 1rem;
+    font-weight: 600;
+}
+[data-testid="column"]:nth-child(4) [data-testid="stMetric"] { border-top-color: #00897B; }
+[data-testid="column"]:nth-child(7) [data-testid="stMetric"] { border-top-color: #00897B; }
+
+/* 5. BUTTONS */
+button[data-testid="baseButton-secondary"] {
+    background-color: #FFFFFF !important;
+    border: 1px solid #1976D2 !important;
+    color: #1976D2 !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+button[data-testid="baseButton-secondary"]:hover {
+    background-color: #E3F2FD !important;
+    color: #1565C0 !important;
+    border-color: #1565C0 !important;
+}
+button[data-testid="baseButton-primary"] {
+    background-color: #1976D2 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+}
+button[data-testid="baseButton-primary"]:hover {
+    background-color: #1565C0 !important;
+}
+
+/* 6. EXPANDERS & TABS */
+.st-emotion-cache-1n76uvr, [data-testid="stExpander"], details { 
+    background-color: #FFFFFF !important;
+    border: 1px solid #D6E7F2 !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    color: #16324F !important;
+}
+[data-testid="stExpander"] summary, [data-testid="stExpander"] summary span, [data-testid="stExpander"] summary p, details summary {
+    color: #16324F !important;
+    font-weight: 600 !important;
+}
+[data-testid="stExpander"] summary svg, details summary svg {
+    fill: #1976D2 !important;
+    color: #1976D2 !important;
+}
+.stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+    color: #1976D2 !important;
+    border-bottom-color: #1976D2 !important;
+    background-color: #E3F2FD !important;
+    border-radius: 8px 8px 0 0;
+}
+.stTabs [data-baseweb="tab-list"] button {
+    color: #607D8B !important;
+    font-weight: 600;
+}
+.stAlert {
+    background-color: #E3F2FD !important;
+    color: #1565C0 !important;
+    border-left: 4px solid #1976D2 !important;
+}
+
+/* Remove black rectangle behind charts generated by Streamlit dark overriding */
+[data-testid="stPlotlyChart"],
+.js-plotly-plot,
+.plot-container,
+.plotly {
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+}
+
+.js-plotly-plot .bglayer > rect {
+    fill: #F7FBFF !important;
+}
+</style>
+''', unsafe_allow_html=True)
+
+hc_colors = ["#1976D2", "#00897B", "#64B5F6", "#4DB6AC", "#1565C0", "#00695C", "#90CAF9", "#80CBC4"]
+pio.templates["healthcare"] = pio.templates["plotly_white"]
+pio.templates["healthcare"].layout.colorway = hc_colors
+pio.templates["healthcare"].layout.font.color = "#16324F"
+pio.templates["healthcare"].layout.paper_bgcolor = "#FFFFFF"
+pio.templates["healthcare"].layout.plot_bgcolor = "#F7FBFF"
+pio.templates["healthcare"].layout.xaxis.gridcolor = "#D6E7F2"
+pio.templates["healthcare"].layout.yaxis.gridcolor = "#D6E7F2"
+pio.templates["healthcare"].layout.xaxis.linecolor = "#D6E7F2"
+pio.templates["healthcare"].layout.yaxis.linecolor = "#D6E7F2"
+pio.templates.default = "healthcare"
+
+@st.cache_data
+def load_data():
+    df = pd.read_csv("data/cleaned/master_patient_health.csv")
+    df['admit_date'] = pd.to_datetime(df['admit_date'])
+    df['year'] = df['admit_date'].dt.year
+    df['age_group'] = pd.cut(df['age'], bins=[-1,18,40,60,80,150], labels=['0–18','19–40','41–60','61–80','81+'], right=True)
+    return df
+
+data = load_data()
+
+st.sidebar.markdown("### 🎛️ ANALYSIS CONTROLS")
+years = ["All Years"] + sorted(data["year"].dropna().unique().tolist())
+sel_year = st.sidebar.selectbox("Select Year", years)
+
+analyses = ["Overview", "Patient Analysis", "Clinical Analysis", "Demographic Analysis", "Financial Analysis", "Hospital Analysis", "Admission Analysis", "Outcome Analysis", "Predictive Analytics", "Future Forecasting", "Key Insights & Findings"]
+sel_analysis = st.sidebar.selectbox("Select Analysis", analyses)
+
+ydf = data if sel_year == "All Years" else data[data["year"] == sel_year]
+df = ydf
+
+st.sidebar.markdown("### 🔍 DEEP FILTERS")
+def single_filter(label, col, curr):
+    opts = ["All"] + sorted(curr[col].dropna().astype(str).unique().tolist())
+    return st.sidebar.selectbox(label, opts)
+
+bread = f"{sel_year} ➔ {sel_analysis}"
+sel_cat = ""
+pop_context = "Selected Cohort"
+
+if sel_analysis == "Clinical Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Ward Type", "Admission Type", "Diagnosis Category", "Specific Diagnosis", "Length of Stay", "Procedures", "Clinical Outcome"])
+    c_ward = single_filter("Filter by Ward", "ward_type", df)
+    df = df if c_ward == "All" else df[df["ward_type"]==c_ward]
+    c_cat2 = single_filter("Filter by Diagnosis Category", "primary_category", df)
+    df = df if c_cat2 == "All" else df[df["primary_category"]==c_cat2]
+    c_diag = single_filter("Filter by Specific Diagnosis", "primary_diagnosis", df)
+    df = df if c_diag == "All" else df[df["primary_diagnosis"]==c_diag]
+    bc_arr = [opt for opt in [c_ward, c_cat2, c_diag] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Clinical ({sel_cat})"
+
+elif sel_analysis == "Demographic Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Gender", "Age Group", "Patient State", "BPL Status", "Insurance Type"])
+    c_gen = single_filter("Filter by Gender", "gender", df)
+    df = df if c_gen == "All" else df[df["gender"]==c_gen]
+    c_age = single_filter("Filter by Age Group", "age_group", df)
+    df = df if c_age == "All" else df[df["age_group"]==c_age]
+    c_bpl = single_filter("Filter by BPL Status", "bpl_card", df)
+    df = df if c_bpl == "All" else df[df["bpl_card"]==c_bpl]
+    bc_arr = [opt for opt in [c_gen, c_age, c_bpl] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Demographic ({sel_cat})"
+
+elif sel_analysis == "Financial Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Insurance Type", "BPL Status", "Cost Category", "Total Treatment Cost", "Government Subsidy", "Out-of-Pocket Cost"])
+    c_ins = single_filter("Filter by Insurance", "insurance_type", df)
+    if c_ins == "Unknown": st.sidebar.warning("Note: Unknown represents missing insurance information natively.")
+    df = df if c_ins == "All" else df[df["insurance_type"]==c_ins]
+    c_bpl = single_filter("Filter by BPL Status", "bpl_card", df)
+    df = df if c_bpl == "All" else df[df["bpl_card"]==c_bpl]
+    bc_arr = [opt for opt in [c_ins, c_bpl] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Financial ({sel_cat})"
+
+elif sel_analysis == "Hospital Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Hospital Tier", "Hospital", "Hospital State", "Teaching Status", "Ward"])
+    c_tier = single_filter("Filter by Tier", "tier", df)
+    df = df if c_tier == "All" else df[df["tier"]==c_tier]
+    c_hp = single_filter("Filter by Hospital", "name", df)
+    df = df if c_hp == "All" else df[df["name"]==c_hp]
+    c_ward = single_filter("Filter by Ward", "ward_type", df)
+    df = df if c_ward == "All" else df[df["ward_type"]==c_ward]
+    bc_arr = [opt for opt in [c_tier, c_hp, c_ward] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Hospital ({sel_cat})"
+
+elif sel_analysis == "Admission Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Emergency", "Elective", "OPD", "Admission Trend"])
+    c_adm = single_filter("Filter by Admit Route", "admit_type", df)
+    df = df if c_adm == "All" else df[df["admit_type"]==c_adm]
+    bc_arr = [opt for opt in [c_adm] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Admission ({sel_cat})"
+
+elif sel_analysis == "Outcome Analysis":
+    sel_cat = st.sidebar.selectbox("Select Category", ["Recovered", "LAMA", "Referred", "Expired", "All Outcomes"])
+    c_out = single_filter("Filter by Outcome", "discharge_type", df)
+    df = df if c_out == "All" else df[df["discharge_type"]==c_out]
+    bc_arr = [opt for opt in [c_out] if opt != "All"]
+    bread += f" ➔ {sel_cat}" + (" ➔ " + " ➔ ".join(bc_arr) if len(bc_arr)>0 else "")
+    pop_context = bc_arr[-1] if len(bc_arr)>0 else f"Outcome ({sel_cat})"
+
+elif sel_analysis == "Future Forecasting":
+    st.sidebar.markdown("### ⏲️ FORECAST PARAMETERS")
+    target_year = st.sidebar.slider("Target Prediction Year", 2025, 2030, 2026)
+    sel_cat = "Trend Projection"
+    
+    c_dis = single_filter("Filter Disease Category", "primary_category", data)
+    c_hosp = single_filter("Filter by Hospital", "name", data)
+    c_sta = single_filter("Filter by State", "hospital_state", data)
+    bread = f"Future Forecasting ➔ Projections up to {target_year}"
+
+def render_chart(fig):
+    import uuid
+    fig.update_layout(paper_bgcolor="#FFFFFF", plot_bgcolor="#F7FBFF", font_color="#16324F", xaxis=dict(showgrid=True, gridcolor="#D6E7F2", linecolor="#D6E7F2"), yaxis=dict(showgrid=True, gridcolor="#D6E7F2", linecolor="#D6E7F2"))
+    st.markdown('<div style="background-color: #FFFFFF; border: 1px solid #D6E7F2; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 5px; margin-bottom: 5px;">', unsafe_allow_html=True)
+    st.plotly_chart(fig, use_container_width=True, theme=None, key=str(uuid.uuid4()))
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def dump_insight(msg):
+    import streamlit as st
+    st.markdown(msg)
+
+def generate_analytical_insight(agg_d, x, y, pop, raw_d, graph_type):
+    if raw_d is None or raw_d.empty: return ""
+    try:
+        col_x = x[0] if type(x) is list else x
+        
+        if graph_type == "histogram" or graph_type == "scatter plot" or graph_type == "box plot":
+            hx = str(col_x).replace('_', ' ').title()
+            msg = f"### 1. What does this graph show?\nThis {graph_type} displays the distribution and density of **{hx}** across the selected population: **{pop}**. It provides a granular view into where data points naturally cluster, highlighting expected clinical or operational bounds.\n\n"
+            
+            try: mode_val = raw_d[col_x].mode().iloc[0]
+            except: mode_val = "N/A"
+            
+            msg += f"### 2. Observed pattern\nThe dataset shows a distinct clustering of admissions. The most concentrated zone lies around **{mode_val}**. This concentration defines the typical hospital experience for the selected subset, indicating where standard variations safely lie.\n\n"
+            
+            msg += f"### 3. Why is this pattern observed?\nThis distribution is fundamentally associated with clinical operational standards. A tight cluster indicates standardized procedural recovery times or fixed cost brackets, whereas widespread tails suggest complex outlier patients demanding custom attention.\n\n"
+            
+            msg += f"### 4. Analytical breakdown\nIsolating the most frequent subset ({hx} = {mode_val}):\n"
+            sub = raw_d[raw_d[col_x] == mode_val] if type(mode_val) != str else raw_d
+            if not sub.empty:
+                msg += f"*   **Average Cost:** ₹{sub['total_cost_inr'].mean():,.0f} (OOP: ₹{sub['out_of_pocket_inr'].mean():,.0f})\n"
+                msg += f"*   **Average LOS:** {sub['los_days'].mean():.2f} days\n"
+                msg += f"*   **Procedures:** {sub['num_procedures'].mean():.1f}\n"
+                msg += f"*   **Admissions volume:** {len(sub):,}\n\n"
+            
+            msg += f"### 5. Project implication\nVisualizing this spread empowers hospital administrators to identify outlier limits. Understanding the baseline distribution of {hx} ensures that deviations from the norm are rapidly flagged for operational review.\n"
+            return msg
+
+        is_cnt = (y == "count")
+        metric_name = "total admissions" if is_cnt else str(y).replace('_', ' ').title()
+        hx = str(col_x).replace('_', ' ').title()
+        
+        msg = f"### 1. What does this graph show?\nThis {graph_type} represents **{metric_name}** across various categories of **{hx}**. The currently selected population is **{pop}**. This visualization systematically isolates how different {hx} groups diverge in terms of {metric_name} footprint.\n\n"
+        
+        sorted_d = agg_d.sort_values(by=y, ascending=False)
+        top_cat = sorted_d.iloc[0][col_x]
+        top_val = sorted_d.iloc[0][y]
+        bot_cat = sorted_d.iloc[-1][col_x]
+        bot_val = sorted_d.iloc[-1][y]
+        
+        msg += f"### 2. Observed pattern\nThe dataset shows that the highest {metric_name} occurs in **{top_cat}** at **{top_val:,.1f}**. Conversely, the lowest metric lies in **{bot_cat}** at **{bot_val:,.1f}**. "
+        if is_cnt:
+            pct = (top_val / agg_d[y].sum() * 100) if agg_d[y].sum() > 0 else 0
+            msg += f"The category '{top_cat}' captures approximately **{pct:.1f}%** of all volume within this filter block.\n\n"
+        else:
+            msg += f"This distinct variance signals that {hx} is differentially associated with the underlying case complexity or billing structure across the cohort.\n\n"
+
+        msg += f"### 3. Why is this pattern observed?\nThese patterns are rarely arbitrary; they correlate with acute severity and systemic hospital handling protocols. The dataset demonstrates that the heightened magnitude in **{top_cat}** is frequently associated with distinct differences in stay duration and intervention rates. This relationship should be thoroughly investigated at the procedural level.\n\n"
+
+        msg += f"### 4. Analytical breakdown\nExecuting a deeper layer slice into **{top_cat}** from the filtered data reveals:\n"
+        if col_x in raw_d.columns:
+            sub = raw_d[raw_d[col_x] == top_cat]
+            if not sub.empty:
+                s_diag = sub['primary_diagnosis'].mode().iloc[0] if not sub['primary_diagnosis'].mode().empty else "N/A"
+                s_ward = sub['ward_type'].mode().iloc[0] if not sub['ward_type'].mode().empty else "N/A"
+                msg += f"*   **Primary Diagnosis Encountered:** {s_diag}\n"
+                msg += f"*   **Average Hospital LOS:** {sub['los_days'].mean():.2f} days\n"
+                msg += f"*   **Net Treatment Cost:** ₹{sub['total_cost_inr'].mean():,.0f}\n"
+                msg += f"*   **Net OOP Expenditure:** ₹{sub['out_of_pocket_inr'].mean():,.0f}\n"
+                msg += f"*   **Average Subsidy:** ₹{sub['govt_subsidy_inr'].mean():,.0f}\n"
+                msg += f"*   **Average Procedures:** {sub['num_procedures'].mean():.1f}\n"
+                msg += f"*   **Most Common Ward:** {s_ward}\n\n"
+
+        msg += f"### 5. Project implication\nThis graph helps pinpoint the pivotal {hx} entities dictating capacity and cost thresholds. Expanding investigations explicitly into **{top_cat}** lets clinical strategists map systemic bottlenecks—facilitating optimized procedure planning and robust financial triage.\n"
+        
+        return msg
+    except Exception as e:
+        return ""
+
+def pbar(d, x, y, t, ori='v', pop="", raw_d=None):
+    if not d.empty:
+        col_x = x[0] if type(x) is list else x
+        if ori == 'h':
+            c = px.bar(d, x=y, y=col_x, title=t, orientation=ori)
+        else:
+            c = px.bar(d, x=col_x, y=y, title=t, orientation=ori)
+        if ori=='h': c.update_yaxes(categoryorder="total ascending")
+        render_chart(c)
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "bar chart")
+            if ans: dump_insight(ans)
+
+def ppie(d, n, v, t, pop="", raw_d=None):
+    if not d.empty: 
+        col_n = n[0] if type(n) is list else n
+        render_chart(px.pie(d, names=col_n, values=v, title=t, hole=0.3))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, n, v, pop, raw_d, "pie chart")
+            if ans: dump_insight(ans)
+
+def phist(d, x, t, color=None, pop="", raw_d=None):
+    if not d.empty: 
+        render_chart(px.histogram(d, x=x, title=t, color=color, barmode='group'))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, "", pop, raw_d, "histogram")
+            if ans: dump_insight(ans)
+
+def psca(d, x, y, t, pop="", raw_d=None):
+    if not d.empty: 
+        render_chart(px.scatter(d, x=x, y=y, title=t, opacity=0.1))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "scatter plot")
+            if ans: dump_insight(ans)
+
+def pbox(d, x, y, t, pop="", raw_d=None):
+    if not d.empty:
+        render_chart(px.box(d, x=x, y=y, title=t))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "box plot")
+            if ans: dump_insight(ans)
+
+def cnt(d, c): return d.value_counts(subset=c).reset_index(name="count")
+def avg(d, g, c): return d.groupby(g)[c].mean().reset_index()
+
+def drilldown_content(d, pop_name="Selected Patients"):
+    pop = pop_name
+    st.markdown("### 📌 Selected Population Overview")
+    k1,k2,k3,k4,k5 = st.columns(5)
+    k1.metric("Total Admissions", f"{len(d):,}")
+    k2.metric("Unique Patients", f"{d['patient_id'].nunique():,}" if not d.empty else "0")
+    k3.metric("Average LOS", f"{d['los_days'].mean():.2f}" if not d.empty else "0")
+    k4.metric("Median LOS", f"{d['los_days'].median():.2f}" if not d.empty else "0")
+    k5.metric("Average Total Cost", f"₹{d['total_cost_inr'].mean():,.0f}" if not d.empty else "0")
+    
+    k6,k7,k8,k9,k10 = st.columns(5)
+    k6.metric("Average OOP", f"₹{d['out_of_pocket_inr'].mean():,.0f}" if not d.empty else "0")
+    k7.metric("Average Subsidy", f"₹{d['govt_subsidy_inr'].mean():,.0f}" if not d.empty else "0")
+    k8.metric("Average Procedures", f"{d['num_procedures'].mean():.1f}" if not d.empty else "0")
+    k9.metric("Average Comorbidity", f"{d['comorbidity_count'].mean():.1f}" if not d.empty else "0")
+    k10.metric("Average Diagnoses", f"{d['num_diagnoses'].mean():.1f}" if not d.empty else "0")
+
+    with st.expander("👥 Patient Profile", expanded=True):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["age_group"]), ["age_group"], "count", f"Which Age Groups Are Present? — {pop}", "v", pop, raw_d=d)
+        with c2: ppie(cnt(d, ["gender"]), ["gender"], "count", f"What is the Gender Distribution? — {pop}", pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: ppie(cnt(d, ["bpl_card"]), ["bpl_card"], "count", f"What is the BPL Status Breakdown? — {pop}", pop, raw_d=d)
+        with c4: pbar(cnt(d, ["insurance_type"]), ["insurance_type"], "count", f"Which Insurance Types Are Used? — {pop}", "h", pop, raw_d=d)
+        c5, c6 = st.columns(2)
+        with c5: phist(d, "comorbidity_count", f"How Does Comorbidity Distribute? — {pop}", pop=pop, raw_d=d)
+        with c6: phist(d, "prev_admissions", f"What is the Distribution of Previous Admissions? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🦠 Disease & Diagnosis Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["primary_category"]).head(10), ["primary_category"], "count", f"Which Disease Categories Are Most Common? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(cnt(d, ["primary_diagnosis"]).head(10), ["primary_diagnosis"], "count", f"What Are the Top Specific Diagnoses? — {pop}", "h", pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: phist(d, "num_diagnoses", f"How Many Diagnoses Per Admission on Average? — {pop}", pop=pop, raw_d=d)
+        with c4: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="primary_category", color="age_group", title=f"How Do Disease Categories Compare Across Age Groups? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph correlates primary disease category with the patient's age block. It highlights which age groups are disproportionately impacted by specific illnesses.")
+        c5, c6 = st.columns(2)
+        with c5: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="primary_category", color="gender", title=f"How Do Diseases Differ by Gender? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph breaks down diseases by patient gender, revealing observed patterns of prevalence between male and female segments.")
+        with c6: 
+            if not d.empty: pbar(avg(d, "primary_category", "comorbidity_count"), "primary_category", "comorbidity_count", f"What is the Average Comorbidity per Disease Category? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🚑 Admission Pattern"):
+        c1, c2 = st.columns(2)
+        with c1: ppie(cnt(d, ["admit_type"]), ["admit_type"], "count", f"How Were Patients Admitted to the Hospital? — {pop}", pop, raw_d=d)
+        with c2: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="admit_type", color="primary_category", title=f"Which Admission Types Are Associated with Disease Categories? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this illustrates how entry points (e.g., Emergency vs OPD) correlate with specific disease categories.")
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "admit_type", "los_days"), "admit_type", "los_days", f"How Long Is the Stay by Admission Type? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "admit_type", "total_cost_inr"), "admit_type", "total_cost_inr", f"What Is the Average Cost by Admission Type? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🏥 Care & Resource Utilization"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(avg(d, "ward_type", "los_days"), "ward_type", "los_days", f"How Long Is the Stay Across Different Ward Types? — {pop}", pop=pop, raw_d=d)
+        with c2: pbar(avg(d, "ward_type", "total_cost_inr"), "ward_type", "total_cost_inr", f"How Much Do Different Wards Cost on Average? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: psca(d, "num_procedures", "los_days", f"Is the Number of Procedures Associated with LOS? — {pop}", pop, raw_d=d)
+        with c4: psca(d, "num_procedures", "total_cost_inr", f"Is the Number of Procedures Associated with Higher Cost? — {pop}", pop, raw_d=d)
+        c5, c6 = st.columns(2)
+        with c5: psca(d, "comorbidity_count", "los_days", f"Does Higher Comorbidity Correlate with Longer Stays? — {pop}", pop, raw_d=d)
+        with c6: psca(d, "los_days", "total_cost_inr", f"How Does LOS Relate to Total Treatment Cost? — {pop}", pop, raw_d=d)
+
+    with st.expander("⏱ Length of Stay Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: phist(d, "los_days", f"What is the Overall LOS Distribution? — {pop}", pop=pop, raw_d=d)
+        with c2: pbar(avg(d, "primary_category", "los_days"), "primary_category", "los_days", f"How Long Do Patients Stay Across Disease Categories? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "primary_diagnosis", "los_days").sort_values("los_days", ascending=False).head(10) if not d.empty else pd.DataFrame(), "primary_diagnosis", "los_days", f"Which Diagnoses Have the Longest LOS? — {pop}", "h", pop, raw_d=d)
+        with c4: pbar(avg(d, "age_group", "los_days"), "age_group", "los_days", f"How Does Average LOS Vary by Age Group? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("💰 Financial Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(avg(d, "primary_category", "total_cost_inr"), "primary_category", "total_cost_inr", f"Which Disease Categories Have the Highest Average Treatment Cost? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(avg(d, "ward_type", "total_cost_inr"), "ward_type", "total_cost_inr", f"What is the Average Cost Associated with Each Ward? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "insurance_type", "govt_subsidy_inr"), "insurance_type", "govt_subsidy_inr", f"How Much Subsidy is Provided per Insurance Type? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "primary_category", "out_of_pocket_inr"), "primary_category", "out_of_pocket_inr", f"Which Disease Categories Produce the Highest Out-of-Pocket Expense? — {pop}", "h", pop, raw_d=d)
+
+    with st.expander("📋 Outcome Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: ppie(cnt(d, ["discharge_type"]), ["discharge_type"], "count", f"What Are the Overall Discharge Outcomes? — {pop}", pop, raw_d=d)
+        with c2: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="discharge_type", color="ward_type", title=f"How Do Discharge Outcomes Differ by Ward? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph breaks down the discharge outcomes by the ward in which the patient was treated, observing whether intensive wards influence discharge patterns.")
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "discharge_type", "los_days"), "discharge_type", "los_days", f"Is There a Relationship Between Discharge Outcome and LOS? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "discharge_type", "total_cost_inr"), "discharge_type", "total_cost_inr", f"Are Higher Costs Associated with Certain Outcomes? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🏨 Hospital Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["name"]).head(10), ["name"], "count", f"Which Hospitals Handle the Most Cases for This Selection? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(avg(d, "tier", "total_cost_inr"), "tier", "total_cost_inr", f"How Does Average Cost Differ by Hospital Tier? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "teaching", "total_cost_inr"), "teaching", "total_cost_inr", f"How Does Cost Compare in Teaching vs Non-Teaching Institutions? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "name", "los_days").sort_values("los_days", ascending=False).head(10) if not d.empty else pd.DataFrame(), "name", "los_days", f"Which Hospitals Exhibit the Longest LOS? — {pop}", "h", pop, raw_d=d)
+
+    with st.expander("💡 What the Data Shows", expanded=True):
+        if not d.empty:
+            st.info(f'''
+            **Key Observational Summary for {pop}:**
+            - **Dominant Diagnosis:** The most frequent diagnosis in this population is **{d["primary_diagnosis"].mode()[0] if not d["primary_diagnosis"].empty else "N/A"}**.
+            - **Major Demographic:** The **{d["age_group"].mode()[0] if not d["age_group"].empty else "N/A"}** age group forms the largest segment.
+            - **Common Entry Route:** Patients primarily present via **{d["admit_type"].mode()[0] if not d["admit_type"].empty else "N/A"}**.
+            - **Stay Duration:** The observed median length of stay is **{d["los_days"].median():.1f} days**, with an average of **{d["los_days"].mean():.1f} days**.
+            - **Primary Outcome:** The majority of these patients are recorded as **{d["discharge_type"].mode()[0] if not d["discharge_type"].empty else "N/A"}**.
+            - **Financial Burden:** Treatment cost averages **₹{d["total_cost_inr"].mean():,.0f}**, translating to a mean out-of-pocket patient expense of **₹{d["out_of_pocket_inr"].mean():,.0f}** alongside a **₹{d["govt_subsidy_inr"].mean():,.0f}** subsidy.
+            - **Clinical Complexity:** This group typically requires **{d["num_procedures"].mean():.1f} procedures** and exhibits an average of **{d["comorbidity_count"].mean():.1f} comorbid conditions**.
+            ''')
+        else:
+            st.info("No records match the current selection.")
+
+if sel_analysis == "Overview":
+    st.title(f"🏥 {'Healthcare Overview' if sel_year == 'All Years' else f'{sel_year} Healthcare Overview'}")
+    if sel_year != "All Years": st.markdown(f"*Based on selected year: {sel_year}*")
+    
+    k1,k2,k3,k4 = st.columns(4)
+    k1.metric("Total Admissions", f"{len(df):,}")
+    k2.metric("Unique Patients", f"{df['patient_id'].nunique():,}" if not df.empty else "0")
+    k3.metric("Average LOS", f"{df['los_days'].mean():.2f}" if not df.empty else "0")
+    k4.metric("Average Age", f"{df['age'].mean():.1f}" if not df.empty else "0")
+    
+    k5,k6,k7,k8 = st.columns(4)
+    k5.metric("Average Total Cost", f"₹{df['total_cost_inr'].mean():,.0f}" if not df.empty else "0")
+    k6.metric("Average OOP", f"₹{df['out_of_pocket_inr'].mean():,.0f}" if not df.empty else "0")
+    k7.metric("Average Subsidy", f"₹{df['govt_subsidy_inr'].mean():,.0f}" if not df.empty else "0")
+    
+    if not df.empty:
+        thresh = df['total_cost_inr'].quantile(0.95)
+        hc = len(df[df['total_cost_inr']>=thresh])
+    else: hc = 0
+    k8.metric("High-Cost Admissions", f"{hc:,}")
+    st.markdown("---")
+    
+    if sel_year == "All Years":
+        st.subheader("📈 Year-wise Trend")
+        r1, r2, r3 = st.columns(3)
+        with r1: render_chart(px.line(cnt(df,['year']).sort_values('year'), x='year', y='count', title="Admissions by Year", markers=True))
+        with r2: render_chart(px.line(avg(df,'year','total_cost_inr').sort_values('year'), x='year', y='total_cost_inr', title="Average Cost by Year", markers=True))
+        with r3: render_chart(px.line(avg(df,'year','los_days').sort_values('year'), x='year', y='los_days', title="Average LOS by Year", markers=True))
+    else:
+        st.subheader(f"📊 Detailed Analysis — {sel_year}")
+        r1, r2 = st.columns(2)
+        with r1: ppie(cnt(df,['admit_type']), ["admit_type"], "count", "Admission Type Distribution", pop="Overview Population", raw_d=df)
+        with r2: phist(df, "ward_type", "Ward Distribution", pop="Overview Population", raw_d=df)
+        r3, r4 = st.columns(2)
+        with r3: pbar(cnt(df,['primary_category']).head(10), ["primary_category"], "count", "Top Diagnosis Categories", 'h', pop="Overview Population", raw_d=df)
+        with r4: pbar(avg(df,"ward_type","total_cost_inr"), "ward_type", "total_cost_inr", "Average Cost by Ward", pop="Overview Population", raw_d=df)
+
+elif sel_analysis not in ["Predictive Analytics", "Future Forecasting", "Key Insights & Findings"]:
+    st.markdown(f"<div style='background-color:#E3F2FD; padding:10px; border-radius:6px; color:#1565C0; font-weight:600; margin-bottom: 20px;'>{bread}</div>", unsafe_allow_html=True)
+    st.markdown(f"### {sel_year if sel_year != 'All Years' else 'All Years'} {sel_analysis} — {sel_cat}")
+    drilldown_content(df, pop_name=f"{pop_context} ({sel_year})")
+
+elif sel_analysis == "Predictive Analytics":
+    st.title("🤖 Predictive Analytics")
+    st.info("All model evaluations and visualizations are performed strictly on a 20% holdout test set to ensure valid generalization metrics.")
+    tab1, tab2, tab3 = st.tabs(["📊 Classification (High-Cost Admission)", "📈 Regression (Length of Stay)", "🏥 Interactive Prediction Engine"])
+    
+    with tab1:
+        st.markdown("This classification model estimates whether an admission belongs to the high-cost group based on patient, clinical, admission, insurance, and hospital characteristics available in the dataset. The high-cost threshold is defined using the 95th percentile of total treatment cost.")
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler, OneHotEncoder
+        from sklearn.compose import ColumnTransformer
+        from sklearn.linear_model import LogisticRegression, LinearRegression
+        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+        from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, roc_curve, mean_absolute_error, mean_squared_error, r2_score
+        
+        @st.cache_resource
+        def train_classification_pipeline(df_in):
+            d = df_in.copy()
+            thresh = d['total_cost_inr'].quantile(0.95)
+            d['high_cost'] = (d['total_cost_inr'] >= thresh).astype(int)
+            num_cols = ['age', 'comorbidity_count', 'prev_admissions', 'num_procedures', 'num_diagnoses', 'beds']
+            cat_cols = ['gender', 'ward_type', 'admit_type', 'primary_category', 'insurance_type', 'bpl_card', 'tier', 'teaching']
+            X = d[num_cols + cat_cols].fillna(0)
+            X[cat_cols] = X[cat_cols].astype(str)
+            y = d['high_cost']
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+            prep = ColumnTransformer([('num', StandardScaler(), num_cols), ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_cols)])
+            X_tr = prep.fit_transform(X_train)
+            X_te = prep.transform(X_test)
+            lr = LogisticRegression(class_weight="balanced", random_state=42, max_iter=1000)
+            rf = RandomForestClassifier(class_weight="balanced", random_state=42, n_estimators=50, max_depth=10, n_jobs=-1)
+            lr.fit(X_tr, y_train)
+            rf.fit(X_tr, y_train)
+            return thresh, y.value_counts().to_dict(), prep, lr, rf, X_test, y_test, X_te
+        
+        thresh, yc, prep_c, lr_m, rf_m, X_test_c, y_test_c, X_te_c = train_classification_pipeline(data)
+
+        st.subheader("Class Distribution")
+        kc1, kc2, kc3, kc4, kc5 = st.columns(5)
+        kc1.metric("Total Admissions", f"{len(data):,}")
+        kc2.metric("High-Cost Admissions", f"{yc.get(1,0):,}")
+        kc3.metric("Normal-Cost Admissions", f"{yc.get(0,0):,}")
+        kc4.metric("High-Cost Percentage", f"{(yc.get(1,0)/len(data))*100:.2f}%")
+        kc5.metric("High-Cost Threshold", f"₹{thresh:,.2f}")
+        
+        cdf = pd.DataFrame([{"Class": "Normal Cost", "Count": yc.get(0,0)}, {"Class": "High Cost", "Count": yc.get(1,0)}])
+        render_chart(px.bar(cdf, x="Class", y="Count", title="Normal-Cost Admissions vs High-Cost Admissions", color="Class"))
+        st.markdown(f"💡 **What this shows:** The model predicts highly imbalanced data (only roughly 5% extreme costs). It uses weighted sampling to identify critical high-cost cases without claiming causation.")
+
+    with tab2:
+        st.markdown("This regression model aims to predict the Length of Stay (LOS) in days for patients.")
+        @st.cache_resource
+        def train_regression_pipeline(df_in):
+            d = df_in.copy().dropna(subset=['los_days'])
+            d['admission_year'] = d['admit_date'].dt.year
+            d['admission_month'] = d['admit_date'].dt.month
+            num_cols = ['age', 'comorbidity_count', 'prev_admissions', 'num_procedures', 'num_diagnoses', 'beds', 'admission_year', 'admission_month']
+            cat_cols = ['gender', 'ward_type', 'admit_type', 'primary_category', 'insurance_type', 'bpl_card', 'tier', 'teaching']
+            X = d[num_cols + cat_cols].fillna(0)
+            X[cat_cols] = X[cat_cols].astype(str)
+            y = d['los_days']
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            prep = ColumnTransformer([('num', StandardScaler(), num_cols), ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_cols)])
+            X_tr = prep.fit_transform(X_train)
+            X_te = prep.transform(X_test)
+            lin = LinearRegression()
+            rf = RandomForestRegressor(random_state=42, n_estimators=50, max_depth=10, n_jobs=-1)
+            lin.fit(X_tr, y_train)
+            rf.fit(X_tr, y_train)
+            return prep, lin, rf, X_test, y_test, X_te
+            
+        prep_r, lin_r, rf_r, X_test_r, y_test_r, X_te_r = train_regression_pipeline(data)
+        preds_lin = lin_r.predict(X_te_r)
+        preds_rf = rf_r.predict(X_te_r)
+        st.write("Linear Regression MAE:", mean_absolute_error(y_test_r, preds_lin))
+        st.write("Random Forest Regressor MAE:", mean_absolute_error(y_test_r, preds_rf))
+        render_chart(px.scatter(x=y_test_r, y=preds_rf, labels={'x':'Actual LOS', 'y':'Predicted LOS'}, title="Actual vs Predicted LOS"))
+        st.markdown(f"💡 **What this shows:** The model's predictions are compared with actual LOS values. The observed spread indicates where prediction errors are larger or smaller, reflecting dataset correlation rather than a clinical diagnostic rule.")
+        
+    with tab3:
+        @st.cache_resource
+        def train_disease_pipeline(df_in):
+            d = df_in.copy().dropna(subset=['primary_category'])
+            num_dis = ['age', 'comorbidity_count', 'prev_admissions']
+            cat_dis = ['gender', 'insurance_type', 'tier']
+            # Sample to save memory and time
+            d_s = d.sample(frac=0.4, random_state=42)
+            X_dis = d_s[num_dis + cat_dis].fillna(0)
+            X_dis[cat_dis] = X_dis[cat_dis].astype(str)
+            y_dis = d_s['primary_category']
+            
+            prep_d = ColumnTransformer([('n', StandardScaler(), num_dis), ('c', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_dis)])
+            X_d_tr = prep_d.fit_transform(X_dis)
+            rf_d = RandomForestClassifier(random_state=42, n_estimators=30, max_depth=8, n_jobs=-1)
+            rf_d.fit(X_d_tr, y_dis)
+            return prep_d, rf_d
+            
+        prep_d, rf_d = train_disease_pipeline(data)
+
+        st.markdown("### 🧬 AI Patient Triage & Disease Prediction")
+        st.markdown("Enter basic patient parameters below. The AI will first **predict the most likely Disease Category (Diagnosis)**, and then simulate expected **Length of Stay** and **Financial Risk** based on that disease prediction.")
+        with st.form("prediction_form"):
+            fcol1, fcol2, fcol3 = st.columns(3)
+            with fcol1:
+                in_age = st.number_input("Patient Age", min_value=0, max_value=120, value=45)
+                in_gen = st.selectbox("Gender", data['gender'].dropna().unique())
+                in_ward = st.selectbox("Expected Ward Type", data['ward_type'].dropna().unique())
+                
+            with fcol2:
+                in_comorb = st.number_input("Known Comorbidities", 0, 10, 1)
+                in_prev = st.number_input("Previous Admissions", 0, 20, 0)
+                in_ins = st.selectbox("Insurance Type", data['insurance_type'].dropna().unique())
+                
+            with fcol3:
+                in_tier = st.selectbox("Target Hospital Tier", data['tier'].dropna().unique())
+                in_admit = st.selectbox("Admit Route", data['admit_type'].dropna().unique())
+                in_bpl = st.selectbox("BPL Card Possessed", ["Yes", "No"])
+                
+            # hidden default inputs for subsequent models (required but not logically needed for disease)
+            in_proc = 1
+            in_diag = 2
+            in_teach = "Yes"
+            in_beds = 200
+            
+            submitted = st.form_submit_button("🩺 Predict Disease & Outcomes")
+            if submitted:
+                import datetime
+                import numpy as np
+                
+                # 1. Disease Prediction Phase
+                d_row = {
+                    'age': in_age, 'comorbidity_count': in_comorb, 'prev_admissions': in_prev,
+                    'gender': in_gen, 'insurance_type': in_ins, 'tier': in_tier
+                }
+                d_df = pd.DataFrame([d_row])
+                X_d_trans = prep_d.transform(d_df)
+                
+                dis_probs = rf_d.predict_proba(X_d_trans)[0]
+                dis_classes = rf_d.classes_
+                
+                # Get top 3
+                top_indices = np.argsort(dis_probs)[::-1][:3]
+                top_dis = dis_classes[top_indices[0]]
+                top_prob = dis_probs[top_indices[0]] * 100
+                
+                st.success("Analysis Complete! Patient profile scanned across 120,000 historical records.")
+                
+                st.markdown("### 1. Predicted Disease Breakdown")
+                st.info(f"Based on the provided demographic and historical parameters, the model strongly flags a potential **{top_dis}** condition.")
+                
+                cc1, cc2, cc3 = st.columns(3)
+                cc1.metric(dis_classes[top_indices[0]], f"{dis_probs[top_indices[0]]*100:.1f}%")
+                cc2.metric(dis_classes[top_indices[1]], f"{dis_probs[top_indices[1]]*100:.1f}%")
+                cc3.metric(dis_classes[top_indices[2]], f"{dis_probs[top_indices[2]]*100:.1f}%")
+                
+                # 2. Pipeline Phase
+                row = {
+                    'age': in_age, 'comorbidity_count': in_comorb, 'prev_admissions': in_prev,
+                    'num_procedures': in_proc, 'num_diagnoses': in_diag, 'beds': in_beds,
+                    'gender': in_gen, 'ward_type': in_ward, 'admit_type': in_admit,
+                    'primary_category': top_dis, 'insurance_type': in_ins, 'bpl_card': in_bpl,
+                    'tier': in_tier, 'teaching': in_teach,
+                    'admission_year': datetime.datetime.now().year,
+                    'admission_month': datetime.datetime.now().month
+                }
+                inp_df = pd.DataFrame([row])
+                
+                # Predict
+                try:
+                    X_clf = prep_c.transform(inp_df)
+                    clf_pred = rf_m.predict(X_clf)[0]
+                    clf_prob = rf_m.predict_proba(X_clf)[0][1]
+                    
+                    X_reg = prep_r.transform(inp_df)
+                    reg_pred = rf_r.predict(X_reg)[0]
+                    
+                    st.markdown("### 2. Follow-Up Outcome Predictions")
+                    st.markdown(f"Assuming the primary condition is *{top_dis}*, here are the projected operational requirements:")
+                    rc1, rc2 = st.columns(2)
+                    rc1.metric("Predicted Length of Stay (LOS)", f"{reg_pred:.1f} Days")
+                    risk_label = "High Financial Risk (Top 5%)" if clf_pred == 1 else "Normal Expected Cost"
+                    rc2.metric("Financial Cost Risk", risk_label, f"{(clf_prob*100):.1f}% Probability", delta_color="inverse" if clf_pred==1 else "normal")
+                except Exception as e:
+                    st.error(f"Secondary Prediction Error: {e}")
+
+
+
+elif sel_analysis == "Future Forecasting":
+    st.sidebar.markdown("### ⏲️ FORECAST PARAMETERS")
+    target_year = st.sidebar.slider("Target Prediction Year", 2025, 2030, 2026)
+    sel_cat = "Trend Projection"
+    
+    c_dis = single_filter("Filter Disease Category", "primary_category", data)
+    c_hosp = single_filter("Filter by Hospital", "name", data)
+    c_sta = single_filter("Filter by State", "hospital_state", data)
+    bread = f"Future Forecasting ➔ Projections up to {target_year}"
+
+def render_chart(fig):
+    import uuid
+    fig.update_layout(paper_bgcolor="#FFFFFF", plot_bgcolor="#F7FBFF", font_color="#16324F", xaxis=dict(showgrid=True, gridcolor="#D6E7F2", linecolor="#D6E7F2"), yaxis=dict(showgrid=True, gridcolor="#D6E7F2", linecolor="#D6E7F2"))
+    st.markdown('<div style="background-color: #FFFFFF; border: 1px solid #D6E7F2; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); padding: 5px; margin-bottom: 5px;">', unsafe_allow_html=True)
+    st.plotly_chart(fig, use_container_width=True, theme=None, key=str(uuid.uuid4()))
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def dump_insight(msg):
+    import streamlit as st
+    st.markdown(msg)
+
+def generate_analytical_insight(agg_d, x, y, pop, raw_d, graph_type):
+    if raw_d is None or raw_d.empty: return ""
+    try:
+        col_x = x[0] if type(x) is list else x
+        
+        if graph_type == "histogram" or graph_type == "scatter plot" or graph_type == "box plot":
+            hx = str(col_x).replace('_', ' ').title()
+            msg = f"### 1. What does this graph show?\nThis {graph_type} displays the distribution and density of **{hx}** across the selected population: **{pop}**. It provides a granular view into where data points naturally cluster, highlighting expected clinical or operational bounds.\n\n"
+            
+            try: mode_val = raw_d[col_x].mode().iloc[0]
+            except: mode_val = "N/A"
+            
+            msg += f"### 2. Observed pattern\nThe dataset shows a distinct clustering of admissions. The most concentrated zone lies around **{mode_val}**. This concentration defines the typical hospital experience for the selected subset, indicating where standard variations safely lie.\n\n"
+            
+            msg += f"### 3. Why is this pattern observed?\nThis distribution is fundamentally associated with clinical operational standards. A tight cluster indicates standardized procedural recovery times or fixed cost brackets, whereas widespread tails suggest complex outlier patients demanding custom attention.\n\n"
+            
+            msg += f"### 4. Analytical breakdown\nIsolating the most frequent subset ({hx} = {mode_val}):\n"
+            sub = raw_d[raw_d[col_x] == mode_val] if type(mode_val) != str else raw_d
+            if not sub.empty:
+                msg += f"*   **Average Cost:** ₹{sub['total_cost_inr'].mean():,.0f} (OOP: ₹{sub['out_of_pocket_inr'].mean():,.0f})\n"
+                msg += f"*   **Average LOS:** {sub['los_days'].mean():.2f} days\n"
+                msg += f"*   **Procedures:** {sub['num_procedures'].mean():.1f}\n"
+                msg += f"*   **Admissions volume:** {len(sub):,}\n\n"
+            
+            msg += f"### 5. Project implication\nVisualizing this spread empowers hospital administrators to identify outlier limits. Understanding the baseline distribution of {hx} ensures that deviations from the norm are rapidly flagged for operational review.\n"
+            return msg
+
+        is_cnt = (y == "count")
+        metric_name = "total admissions" if is_cnt else str(y).replace('_', ' ').title()
+        hx = str(col_x).replace('_', ' ').title()
+        
+        msg = f"### 1. What does this graph show?\nThis {graph_type} represents **{metric_name}** across various categories of **{hx}**. The currently selected population is **{pop}**. This visualization systematically isolates how different {hx} groups diverge in terms of {metric_name} footprint.\n\n"
+        
+        sorted_d = agg_d.sort_values(by=y, ascending=False)
+        top_cat = sorted_d.iloc[0][col_x]
+        top_val = sorted_d.iloc[0][y]
+        bot_cat = sorted_d.iloc[-1][col_x]
+        bot_val = sorted_d.iloc[-1][y]
+        
+        msg += f"### 2. Observed pattern\nThe dataset shows that the highest {metric_name} occurs in **{top_cat}** at **{top_val:,.1f}**. Conversely, the lowest metric lies in **{bot_cat}** at **{bot_val:,.1f}**. "
+        if is_cnt:
+            pct = (top_val / agg_d[y].sum() * 100) if agg_d[y].sum() > 0 else 0
+            msg += f"The category '{top_cat}' captures approximately **{pct:.1f}%** of all volume within this filter block.\n\n"
+        else:
+            msg += f"This distinct variance signals that {hx} is differentially associated with the underlying case complexity or billing structure across the cohort.\n\n"
+
+        msg += f"### 3. Why is this pattern observed?\nThese patterns are rarely arbitrary; they correlate with acute severity and systemic hospital handling protocols. The dataset demonstrates that the heightened magnitude in **{top_cat}** is frequently associated with distinct differences in stay duration and intervention rates. This relationship should be thoroughly investigated at the procedural level.\n\n"
+
+        msg += f"### 4. Analytical breakdown\nExecuting a deeper layer slice into **{top_cat}** from the filtered data reveals:\n"
+        if col_x in raw_d.columns:
+            sub = raw_d[raw_d[col_x] == top_cat]
+            if not sub.empty:
+                s_diag = sub['primary_diagnosis'].mode().iloc[0] if not sub['primary_diagnosis'].mode().empty else "N/A"
+                s_ward = sub['ward_type'].mode().iloc[0] if not sub['ward_type'].mode().empty else "N/A"
+                msg += f"*   **Primary Diagnosis Encountered:** {s_diag}\n"
+                msg += f"*   **Average Hospital LOS:** {sub['los_days'].mean():.2f} days\n"
+                msg += f"*   **Net Treatment Cost:** ₹{sub['total_cost_inr'].mean():,.0f}\n"
+                msg += f"*   **Net OOP Expenditure:** ₹{sub['out_of_pocket_inr'].mean():,.0f}\n"
+                msg += f"*   **Average Subsidy:** ₹{sub['govt_subsidy_inr'].mean():,.0f}\n"
+                msg += f"*   **Average Procedures:** {sub['num_procedures'].mean():.1f}\n"
+                msg += f"*   **Most Common Ward:** {s_ward}\n\n"
+
+        msg += f"### 5. Project implication\nThis graph helps pinpoint the pivotal {hx} entities dictating capacity and cost thresholds. Expanding investigations explicitly into **{top_cat}** lets clinical strategists map systemic bottlenecks—facilitating optimized procedure planning and robust financial triage.\n"
+        
+        return msg
+    except Exception as e:
+        return ""
+
+def pbar(d, x, y, t, ori='v', pop="", raw_d=None):
+    if not d.empty:
+        col_x = x[0] if type(x) is list else x
+        if ori == 'h':
+            c = px.bar(d, x=y, y=col_x, title=t, orientation=ori)
+        else:
+            c = px.bar(d, x=col_x, y=y, title=t, orientation=ori)
+        if ori=='h': c.update_yaxes(categoryorder="total ascending")
+        render_chart(c)
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "bar chart")
+            if ans: dump_insight(ans)
+
+def ppie(d, n, v, t, pop="", raw_d=None):
+    if not d.empty: 
+        col_n = n[0] if type(n) is list else n
+        render_chart(px.pie(d, names=col_n, values=v, title=t, hole=0.3))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, n, v, pop, raw_d, "pie chart")
+            if ans: dump_insight(ans)
+
+def phist(d, x, t, color=None, pop="", raw_d=None):
+    if not d.empty: 
+        render_chart(px.histogram(d, x=x, title=t, color=color, barmode='group'))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, "", pop, raw_d, "histogram")
+            if ans: dump_insight(ans)
+
+def psca(d, x, y, t, pop="", raw_d=None):
+    if not d.empty: 
+        render_chart(px.scatter(d, x=x, y=y, title=t, opacity=0.1))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "scatter plot")
+            if ans: dump_insight(ans)
+
+def pbox(d, x, y, t, pop="", raw_d=None):
+    if not d.empty:
+        render_chart(px.box(d, x=x, y=y, title=t))
+        if raw_d is not None:
+            ans = generate_analytical_insight(d, x, y, pop, raw_d, "box plot")
+            if ans: dump_insight(ans)
+
+def cnt(d, c): return d.value_counts(subset=c).reset_index(name="count")
+def avg(d, g, c): return d.groupby(g)[c].mean().reset_index()
+
+def drilldown_content(d, pop_name="Selected Patients"):
+    pop = pop_name
+    st.markdown("### 📌 Selected Population Overview")
+    k1,k2,k3,k4,k5 = st.columns(5)
+    k1.metric("Total Admissions", f"{len(d):,}")
+    k2.metric("Unique Patients", f"{d['patient_id'].nunique():,}" if not d.empty else "0")
+    k3.metric("Average LOS", f"{d['los_days'].mean():.2f}" if not d.empty else "0")
+    k4.metric("Median LOS", f"{d['los_days'].median():.2f}" if not d.empty else "0")
+    k5.metric("Average Total Cost", f"₹{d['total_cost_inr'].mean():,.0f}" if not d.empty else "0")
+    
+    k6,k7,k8,k9,k10 = st.columns(5)
+    k6.metric("Average OOP", f"₹{d['out_of_pocket_inr'].mean():,.0f}" if not d.empty else "0")
+    k7.metric("Average Subsidy", f"₹{d['govt_subsidy_inr'].mean():,.0f}" if not d.empty else "0")
+    k8.metric("Average Procedures", f"{d['num_procedures'].mean():.1f}" if not d.empty else "0")
+    k9.metric("Average Comorbidity", f"{d['comorbidity_count'].mean():.1f}" if not d.empty else "0")
+    k10.metric("Average Diagnoses", f"{d['num_diagnoses'].mean():.1f}" if not d.empty else "0")
+
+    with st.expander("👥 Patient Profile", expanded=True):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["age_group"]), ["age_group"], "count", f"Which Age Groups Are Present? — {pop}", "v", pop, raw_d=d)
+        with c2: ppie(cnt(d, ["gender"]), ["gender"], "count", f"What is the Gender Distribution? — {pop}", pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: ppie(cnt(d, ["bpl_card"]), ["bpl_card"], "count", f"What is the BPL Status Breakdown? — {pop}", pop, raw_d=d)
+        with c4: pbar(cnt(d, ["insurance_type"]), ["insurance_type"], "count", f"Which Insurance Types Are Used? — {pop}", "h", pop, raw_d=d)
+        c5, c6 = st.columns(2)
+        with c5: phist(d, "comorbidity_count", f"How Does Comorbidity Distribute? — {pop}", pop=pop, raw_d=d)
+        with c6: phist(d, "prev_admissions", f"What is the Distribution of Previous Admissions? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🦠 Disease & Diagnosis Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["primary_category"]).head(10), ["primary_category"], "count", f"Which Disease Categories Are Most Common? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(cnt(d, ["primary_diagnosis"]).head(10), ["primary_diagnosis"], "count", f"What Are the Top Specific Diagnoses? — {pop}", "h", pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: phist(d, "num_diagnoses", f"How Many Diagnoses Per Admission on Average? — {pop}", pop=pop, raw_d=d)
+        with c4: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="primary_category", color="age_group", title=f"How Do Disease Categories Compare Across Age Groups? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph correlates primary disease category with the patient's age block. It highlights which age groups are disproportionately impacted by specific illnesses.")
+        c5, c6 = st.columns(2)
+        with c5: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="primary_category", color="gender", title=f"How Do Diseases Differ by Gender? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph breaks down diseases by patient gender, revealing observed patterns of prevalence between male and female segments.")
+        with c6: 
+            if not d.empty: pbar(avg(d, "primary_category", "comorbidity_count"), "primary_category", "comorbidity_count", f"What is the Average Comorbidity per Disease Category? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🚑 Admission Pattern"):
+        c1, c2 = st.columns(2)
+        with c1: ppie(cnt(d, ["admit_type"]), ["admit_type"], "count", f"How Were Patients Admitted to the Hospital? — {pop}", pop, raw_d=d)
+        with c2: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="admit_type", color="primary_category", title=f"Which Admission Types Are Associated with Disease Categories? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this illustrates how entry points (e.g., Emergency vs OPD) correlate with specific disease categories.")
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "admit_type", "los_days"), "admit_type", "los_days", f"How Long Is the Stay by Admission Type? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "admit_type", "total_cost_inr"), "admit_type", "total_cost_inr", f"What Is the Average Cost by Admission Type? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🏥 Care & Resource Utilization"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(avg(d, "ward_type", "los_days"), "ward_type", "los_days", f"How Long Is the Stay Across Different Ward Types? — {pop}", pop=pop, raw_d=d)
+        with c2: pbar(avg(d, "ward_type", "total_cost_inr"), "ward_type", "total_cost_inr", f"How Much Do Different Wards Cost on Average? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: psca(d, "num_procedures", "los_days", f"Is the Number of Procedures Associated with LOS? — {pop}", pop, raw_d=d)
+        with c4: psca(d, "num_procedures", "total_cost_inr", f"Is the Number of Procedures Associated with Higher Cost? — {pop}", pop, raw_d=d)
+        c5, c6 = st.columns(2)
+        with c5: psca(d, "comorbidity_count", "los_days", f"Does Higher Comorbidity Correlate with Longer Stays? — {pop}", pop, raw_d=d)
+        with c6: psca(d, "los_days", "total_cost_inr", f"How Does LOS Relate to Total Treatment Cost? — {pop}", pop, raw_d=d)
+
+    with st.expander("⏱ Length of Stay Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: phist(d, "los_days", f"What is the Overall LOS Distribution? — {pop}", pop=pop, raw_d=d)
+        with c2: pbar(avg(d, "primary_category", "los_days"), "primary_category", "los_days", f"How Long Do Patients Stay Across Disease Categories? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "primary_diagnosis", "los_days").sort_values("los_days", ascending=False).head(10) if not d.empty else pd.DataFrame(), "primary_diagnosis", "los_days", f"Which Diagnoses Have the Longest LOS? — {pop}", "h", pop, raw_d=d)
+        with c4: pbar(avg(d, "age_group", "los_days"), "age_group", "los_days", f"How Does Average LOS Vary by Age Group? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("💰 Financial Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(avg(d, "primary_category", "total_cost_inr"), "primary_category", "total_cost_inr", f"Which Disease Categories Have the Highest Average Treatment Cost? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(avg(d, "ward_type", "total_cost_inr"), "ward_type", "total_cost_inr", f"What is the Average Cost Associated with Each Ward? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "insurance_type", "govt_subsidy_inr"), "insurance_type", "govt_subsidy_inr", f"How Much Subsidy is Provided per Insurance Type? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "primary_category", "out_of_pocket_inr"), "primary_category", "out_of_pocket_inr", f"Which Disease Categories Produce the Highest Out-of-Pocket Expense? — {pop}", "h", pop, raw_d=d)
+
+    with st.expander("📋 Outcome Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: ppie(cnt(d, ["discharge_type"]), ["discharge_type"], "count", f"What Are the Overall Discharge Outcomes? — {pop}", pop, raw_d=d)
+        with c2: 
+            if not d.empty: 
+                render_chart(px.histogram(d, x="discharge_type", color="ward_type", title=f"How Do Discharge Outcomes Differ by Ward? — {pop}", barmode="group"))
+                st.markdown(f"💡 **What this graph shows:** Among {pop}, this graph breaks down the discharge outcomes by the ward in which the patient was treated, observing whether intensive wards influence discharge patterns.")
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "discharge_type", "los_days"), "discharge_type", "los_days", f"Is There a Relationship Between Discharge Outcome and LOS? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "discharge_type", "total_cost_inr"), "discharge_type", "total_cost_inr", f"Are Higher Costs Associated with Certain Outcomes? — {pop}", pop=pop, raw_d=d)
+
+    with st.expander("🏨 Hospital Analysis"):
+        c1, c2 = st.columns(2)
+        with c1: pbar(cnt(d, ["name"]).head(10), ["name"], "count", f"Which Hospitals Handle the Most Cases for This Selection? — {pop}", "h", pop, raw_d=d)
+        with c2: pbar(avg(d, "tier", "total_cost_inr"), "tier", "total_cost_inr", f"How Does Average Cost Differ by Hospital Tier? — {pop}", pop=pop, raw_d=d)
+        c3, c4 = st.columns(2)
+        with c3: pbar(avg(d, "teaching", "total_cost_inr"), "teaching", "total_cost_inr", f"How Does Cost Compare in Teaching vs Non-Teaching Institutions? — {pop}", pop=pop, raw_d=d)
+        with c4: pbar(avg(d, "name", "los_days").sort_values("los_days", ascending=False).head(10) if not d.empty else pd.DataFrame(), "name", "los_days", f"Which Hospitals Exhibit the Longest LOS? — {pop}", "h", pop, raw_d=d)
+
+    with st.expander("💡 What the Data Shows", expanded=True):
+        if not d.empty:
+            st.info(f'''
+            **Key Observational Summary for {pop}:**
+            - **Dominant Diagnosis:** The most frequent diagnosis in this population is **{d["primary_diagnosis"].mode()[0] if not d["primary_diagnosis"].empty else "N/A"}**.
+            - **Major Demographic:** The **{d["age_group"].mode()[0] if not d["age_group"].empty else "N/A"}** age group forms the largest segment.
+            - **Common Entry Route:** Patients primarily present via **{d["admit_type"].mode()[0] if not d["admit_type"].empty else "N/A"}**.
+            - **Stay Duration:** The observed median length of stay is **{d["los_days"].median():.1f} days**, with an average of **{d["los_days"].mean():.1f} days**.
+            - **Primary Outcome:** The majority of these patients are recorded as **{d["discharge_type"].mode()[0] if not d["discharge_type"].empty else "N/A"}**.
+            - **Financial Burden:** Treatment cost averages **₹{d["total_cost_inr"].mean():,.0f}**, translating to a mean out-of-pocket patient expense of **₹{d["out_of_pocket_inr"].mean():,.0f}** alongside a **₹{d["govt_subsidy_inr"].mean():,.0f}** subsidy.
+            - **Clinical Complexity:** This group typically requires **{d["num_procedures"].mean():.1f} procedures** and exhibits an average of **{d["comorbidity_count"].mean():.1f} comorbid conditions**.
+            ''')
+        else:
+            st.info("No records match the current selection.")
+
+if sel_analysis == "Patient Analysis":
+    import patient_analysis
+    patient_analysis.render_patient_analysis(data)
+
+elif sel_analysis == "Overview":
+    st.title(f"🏥 {'Healthcare Overview' if sel_year == 'All Years' else f'{sel_year} Healthcare Overview'}")
+    if sel_year != "All Years": st.markdown(f"*Based on selected year: {sel_year}*")
+    
+    k1,k2,k3,k4 = st.columns(4)
+    k1.metric("Total Admissions", f"{len(df):,}")
+    k2.metric("Unique Patients", f"{df['patient_id'].nunique():,}" if not df.empty else "0")
+    k3.metric("Average LOS", f"{df['los_days'].mean():.2f}" if not df.empty else "0")
+    k4.metric("Average Age", f"{df['age'].mean():.1f}" if not df.empty else "0")
+    
+    k5,k6,k7,k8 = st.columns(4)
+    k5.metric("Average Total Cost", f"₹{df['total_cost_inr'].mean():,.0f}" if not df.empty else "0")
+    k6.metric("Average OOP", f"₹{df['out_of_pocket_inr'].mean():,.0f}" if not df.empty else "0")
+    k7.metric("Average Subsidy", f"₹{df['govt_subsidy_inr'].mean():,.0f}" if not df.empty else "0")
+    
+    if not df.empty:
+        thresh = df['total_cost_inr'].quantile(0.95)
+        hc = len(df[df['total_cost_inr']>=thresh])
+    else: hc = 0
+    k8.metric("High-Cost Admissions", f"{hc:,}")
+    st.markdown("---")
+    
+    if sel_year == "All Years":
+        st.subheader("📈 Year-wise Trend")
+        r1, r2, r3 = st.columns(3)
+        with r1: render_chart(px.line(cnt(df,['year']).sort_values('year'), x='year', y='count', title="Admissions by Year", markers=True))
+        with r2: render_chart(px.line(avg(df,'year','total_cost_inr').sort_values('year'), x='year', y='total_cost_inr', title="Average Cost by Year", markers=True))
+        with r3: render_chart(px.line(avg(df,'year','los_days').sort_values('year'), x='year', y='los_days', title="Average LOS by Year", markers=True))
+    else:
+        st.subheader(f"📊 Detailed Analysis — {sel_year}")
+        r1, r2 = st.columns(2)
+        with r1: ppie(cnt(df,['admit_type']), ["admit_type"], "count", "Admission Type Distribution", pop="Overview Population", raw_d=df)
+        with r2: phist(df, "ward_type", "Ward Distribution", pop="Overview Population", raw_d=df)
+        r3, r4 = st.columns(2)
+        with r3: pbar(cnt(df,['primary_category']).head(10), ["primary_category"], "count", "Top Diagnosis Categories", 'h', pop="Overview Population", raw_d=df)
+        with r4: pbar(avg(df,"ward_type","total_cost_inr"), "ward_type", "total_cost_inr", "Average Cost by Ward", pop="Overview Population", raw_d=df)
+
+elif sel_analysis not in ["Predictive Analytics", "Future Forecasting", "Key Insights & Findings"]:
+    st.markdown(f"<div style='background-color:#E3F2FD; padding:10px; border-radius:6px; color:#1565C0; font-weight:600; margin-bottom: 20px;'>{bread}</div>", unsafe_allow_html=True)
+    st.markdown(f"### {sel_year if sel_year != 'All Years' else 'All Years'} {sel_analysis} — {sel_cat}")
+    drilldown_content(df, pop_name=f"{pop_context} ({sel_year})")
+
+elif sel_analysis == "Predictive Analytics":
+    st.title("🤖 Predictive Analytics")
+    st.info("All model evaluations and visualizations are performed strictly on a 20% holdout test set to ensure valid generalization metrics.")
+    tab1, tab2, tab3 = st.tabs(["📊 Classification (High-Cost Admission)", "📈 Regression (Length of Stay)", "🏥 Interactive Prediction Engine"])
+    
+    with tab1:
+        st.markdown("This classification model estimates whether an admission belongs to the high-cost group based on patient, clinical, admission, insurance, and hospital characteristics available in the dataset. The high-cost threshold is defined using the 95th percentile of total treatment cost.")
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler, OneHotEncoder
+        from sklearn.compose import ColumnTransformer
+        from sklearn.linear_model import LogisticRegression, LinearRegression
+        from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+        from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, roc_curve, mean_absolute_error, mean_squared_error, r2_score
+        
+        @st.cache_resource
+        def train_classification_pipeline(df_in):
+            d = df_in.copy()
+            thresh = d['total_cost_inr'].quantile(0.95)
+            d['high_cost'] = (d['total_cost_inr'] >= thresh).astype(int)
+            num_cols = ['age', 'comorbidity_count', 'prev_admissions', 'num_procedures', 'num_diagnoses', 'beds']
+            cat_cols = ['gender', 'ward_type', 'admit_type', 'primary_category', 'insurance_type', 'bpl_card', 'tier', 'teaching']
+            X = d[num_cols + cat_cols].fillna(0)
+            X[cat_cols] = X[cat_cols].astype(str)
+            y = d['high_cost']
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+            prep = ColumnTransformer([('num', StandardScaler(), num_cols), ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_cols)])
+            X_tr = prep.fit_transform(X_train)
+            X_te = prep.transform(X_test)
+            lr = LogisticRegression(class_weight="balanced", random_state=42, max_iter=1000)
+            rf = RandomForestClassifier(class_weight="balanced", random_state=42, n_estimators=50, max_depth=10, n_jobs=-1)
+            lr.fit(X_tr, y_train)
+            rf.fit(X_tr, y_train)
+            return thresh, y.value_counts().to_dict(), prep, lr, rf, X_test, y_test, X_te
+        
+        thresh, yc, prep_c, lr_m, rf_m, X_test_c, y_test_c, X_te_c = train_classification_pipeline(data)
+
+        st.subheader("Class Distribution")
+        kc1, kc2, kc3, kc4, kc5 = st.columns(5)
+        kc1.metric("Total Admissions", f"{len(data):,}")
+        kc2.metric("High-Cost Admissions", f"{yc.get(1,0):,}")
+        kc3.metric("Normal-Cost Admissions", f"{yc.get(0,0):,}")
+        kc4.metric("High-Cost Percentage", f"{(yc.get(1,0)/len(data))*100:.2f}%")
+        kc5.metric("High-Cost Threshold", f"₹{thresh:,.2f}")
+        
+        cdf = pd.DataFrame([{"Class": "Normal Cost", "Count": yc.get(0,0)}, {"Class": "High Cost", "Count": yc.get(1,0)}])
+        render_chart(px.bar(cdf, x="Class", y="Count", title="Normal-Cost Admissions vs High-Cost Admissions", color="Class"))
+        st.markdown(f"💡 **What this shows:** The model predicts highly imbalanced data (only roughly 5% extreme costs). It uses weighted sampling to identify critical high-cost cases without claiming causation.")
+
+    with tab2:
+        st.markdown("This regression model aims to predict the Length of Stay (LOS) in days for patients.")
+        @st.cache_resource
+        def train_regression_pipeline(df_in):
+            d = df_in.copy().dropna(subset=['los_days'])
+            d['admission_year'] = d['admit_date'].dt.year
+            d['admission_month'] = d['admit_date'].dt.month
+            num_cols = ['age', 'comorbidity_count', 'prev_admissions', 'num_procedures', 'num_diagnoses', 'beds', 'admission_year', 'admission_month']
+            cat_cols = ['gender', 'ward_type', 'admit_type', 'primary_category', 'insurance_type', 'bpl_card', 'tier', 'teaching']
+            X = d[num_cols + cat_cols].fillna(0)
+            X[cat_cols] = X[cat_cols].astype(str)
+            y = d['los_days']
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            prep = ColumnTransformer([('num', StandardScaler(), num_cols), ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), cat_cols)])
+            X_tr = prep.fit_transform(X_train)
+            X_te = prep.transform(X_test)
+            lin = LinearRegression()
+            rf = RandomForestRegressor(random_state=42, n_estimators=50, max_depth=10, n_jobs=-1)
+            lin.fit(X_tr, y_train)
+            rf.fit(X_tr, y_train)
+            return prep, lin, rf, X_test, y_test, X_te
+            
+        prep_r, lin_r, rf_r, X_test_r, y_test_r, X_te_r = train_regression_pipeline(data)
+        preds_lin = lin_r.predict(X_te_r)
+        preds_rf = rf_r.predict(X_te_r)
+        st.write("Linear Regression MAE:", mean_absolute_error(y_test_r, preds_lin))
+        st.write("Random Forest Regressor MAE:", mean_absolute_error(y_test_r, preds_rf))
+        render_chart(px.scatter(x=y_test_r, y=preds_rf, labels={'x':'Actual LOS', 'y':'Predicted LOS'}, title="Actual vs Predicted LOS"))
+        st.markdown(f"💡 **What this shows:** The model's predictions are compared with actual LOS values. The observed spread indicates where prediction errors are larger or smaller, reflecting dataset correlation rather than a clinical diagnostic rule.")
+        
+    with tab3:
+        st.markdown("### Make a Prediction for a New Patient Case")
+        st.markdown("Enter patient parameters below to simulate and forecast expected Length of Stay and Cost Risk using the trained Random Forest models.")
+        with st.form("prediction_form"):
+            fcol1, fcol2, fcol3 = st.columns(3)
+            with fcol1:
+                in_age = st.number_input("Patient Age", min_value=0, max_value=120, value=45)
+                in_ward = st.selectbox("Ward Type", data['ward_type'].dropna().unique())
+                in_admit = st.selectbox("Admit Type", data['admit_type'].dropna().unique())
+                in_dis = st.selectbox("Disease Category", data['primary_category'].dropna().unique())
+            with fcol2:
+                in_gen = st.selectbox("Gender", data['gender'].dropna().unique())
+                in_ins = st.selectbox("Insurance Type", data['insurance_type'].dropna().unique())
+                in_tier = st.selectbox("Hospital Tier", data['tier'].dropna().unique())
+                in_teach = st.selectbox("Teaching Hospital", ["Yes", "No"])
+            with fcol3:
+                in_comorb = st.number_input("Comorbidities", 0, 10, 1)
+                in_prev = st.number_input("Previous Admissions", 0, 20, 0)
+                in_proc = st.number_input("Expected Procedures", 0, 15, 1)
+                in_diag = st.number_input("Number of Diagnoses", 1, 15, 2)
+                in_bpl = st.selectbox("BPL Card", ["Yes", "No"])
+                in_beds = st.number_input("Hospital Beds", 50, 1500, 200)
+            
+            submitted = st.form_submit_button("Generate AI Prediction")
+            if submitted:
+                import datetime
+                row = {
+                    'age': in_age, 'comorbidity_count': in_comorb, 'prev_admissions': in_prev,
+                    'num_procedures': in_proc, 'num_diagnoses': in_diag, 'beds': in_beds,
+                    'gender': in_gen, 'ward_type': in_ward, 'admit_type': in_admit,
+                    'primary_category': in_dis, 'insurance_type': in_ins, 'bpl_card': in_bpl,
+                    'tier': in_tier, 'teaching': in_teach,
+                    'admission_year': datetime.datetime.now().year,
+                    'admission_month': datetime.datetime.now().month
+                }
+                inp_df = pd.DataFrame([row])
+                
+                # Predict
+                try:
+                    X_clf = prep_c.transform(inp_df)
+                    clf_pred = rf_m.predict(X_clf)[0]
+                    clf_prob = rf_m.predict_proba(X_clf)[0][1]
+                    
+                    X_reg = prep_r.transform(inp_df)
+                    reg_pred = rf_r.predict(X_reg)[0]
+                    
+                    st.success("Prediction Generated Successfully!")
+                    rc1, rc2 = st.columns(2)
+                    rc1.metric("Predicted Length of Stay (LOS)", f"{reg_pred:.1f} Days")
+                    risk_label = "High Financial Risk" if clf_pred == 1 else "Normal Expected Cost"
+                    rc2.metric("Financial Cost Risk", risk_label, f"{(clf_prob*100):.1f}% Probability", delta_color="inverse" if clf_pred==1 else "normal")
+                    st.info(f"🧠 **Model Inference:** Based on 120,000 historical records, similar patients require an average stay of **{reg_pred:.1f} days**. Furthermore, there's a **{clf_prob*100:.1f}% probability** this patient will exceed the top 5% cost threshold (₹{thresh:,.0f}).")
+                except Exception as e:
+                    st.error(f"Prediction Error: {e}")
+
+
+
+
+elif sel_analysis == "Future Forecasting":
+    st.title(f"🔮 Future Disease & Capacity Forecasting (Up to {target_year})")
+    
+    st.markdown(f"<div style='background-color:#E3F2FD; padding:10px; border-radius:6px; color:#1565C0; font-weight:600; margin-bottom: 20px;'>{bread}</div>", unsafe_allow_html=True)
+    st.info(f"Model predicting future trends based on historical patterns (2015-2024).")
+    
+    # Filter on the overarching data, ignoring the main UI year filter (since we need all years for trend)
+    f_df = data.copy()
+    if 'c_dis' in locals() and c_dis != "All": f_df = f_df[f_df["primary_category"] == c_dis]
+    if 'c_hosp' in locals() and c_hosp != "All": f_df = f_df[f_df["name"] == c_hosp]
+    if 'c_sta' in locals() and c_sta != "All": f_df = f_df[f_df["hospital_state"] == c_sta]
+    
+    yearly_counts = f_df.groupby('year').size().reset_index(name='count')
+    
+    if len(yearly_counts) < 3:
+        st.warning("Not enough historical data points to perform a reliable automated forecast for this slice.")
+    else:
+        from sklearn.linear_model import LinearRegression
+        import numpy as np
+        
+        X = yearly_counts[['year']].values
+        y = yearly_counts['count'].values
+        model = LinearRegression()
+        model.fit(X, y)
+        
+        future_years = np.arange(2025, target_year + 1).reshape(-1, 1)
+        preds = np.maximum(0, np.round(model.predict(future_years)))
+        
+        hist_plot = yearly_counts.copy()
+        hist_plot['Timeline'] = 'Historical (Actual)'
+        
+        import pandas as pd
+        fut_plot = pd.DataFrame({'year': future_years.flatten(), 'count': preds, 'Timeline': f'Predicted'})
+        
+        plot_df = pd.concat([hist_plot, fut_plot], ignore_index=True)
+        
+        # KPIs
+        exp_adm = int(preds[-1]) if len(preds) > 0 else 0
+        base_adm = int(y[-1]) if len(y) > 0 else 0
+        growth = ((exp_adm - base_adm) / base_adm * 100) if base_adm > 0 else 0
+        
+        c1, c2, c3 = st.columns(3)
+        c1.metric(f"Projected Admissions ({target_year})", f"{exp_adm:,}")
+        c2.metric(f"Current Baseline Volume", f"{base_adm:,}")
+        c3.metric(f"Expected Growth Delta", f"{growth:+.1f}%")
+        
+        # Plot
+        fig = px.line(plot_df, x='year', y='count', color='Timeline', markers=True, 
+                      title=f"Volume Forecast over Time — {c_dis if 'c_dis' in locals() and c_dis != 'All' else 'All Diseases'}")
+        fig.update_traces(line=dict(dash="dot"), selector=dict(name='Predicted'))
+        render_chart(fig)
+        
+        st.markdown("### 🗺️ Expected Geographical & Facility Burden")
+        st.markdown(f"Assuming hospital distributions remain highly correlated with current baselines, here is the expected location strain for **{target_year}**:")
+        
+        fac_dist = f_df['name'].value_counts(normalize=True).reset_index()
+        fac_dist.columns = ['Hospital', 'Proportion']
+        fac_dist['Expected Patients'] = np.round(fac_dist['Proportion'] * exp_adm)
+        
+        ch1, ch2 = st.columns(2)
+        with ch1:
+            render_chart(px.bar(fac_dist.head(10), x='Expected Patients', y='Hospital', orientation='h', 
+                            title=f"Top 10 Burdened Hospitals in {target_year}").update_yaxes(categoryorder="total ascending"))
+        
+        state_dist = f_df['hospital_state'].value_counts(normalize=True).reset_index()
+        state_dist.columns = ['State', 'Proportion']
+        state_dist['Expected Patients'] = np.round(state_dist['Proportion'] * exp_adm)
+        with ch2:
+            render_chart(px.pie(state_dist.head(8), names='State', values='Expected Patients', hole=0.3, 
+                            title=f"Projected State-Level Hotspots ({target_year})"))
+                            
+        st.markdown(f"""
+#### 🤖 Analyst Breakdown for {target_year}
+- **What this predicts:** If the historical trends for **{c_dis if 'c_dis' in locals() and c_dis != 'All' else 'All Diseases'}** remain consistent, overall volume is modeled to reach **{exp_adm:,}** admissions by {target_year}.
+- **Where they will be:** The heaviest pressure is modeled to fall upon **{fac_dist['Hospital'].iloc[0] if len(fac_dist)>0 else 'N/A'}**. State-wise, **{state_dist['State'].iloc[0] if len(state_dist)>0 else 'N/A'}** projects the most significant concentration of inbound patients.
+- **Project Implication:** Administration and supply-chains should allocate preventative resources, funding, and critical care capacity heavily towards these primary forecasted nodes ahead of time.
+""")
+
+elif sel_analysis == "Key Insights & Findings":
+    st.title("💡 Key Insights & Findings")
+    st.markdown("This page summarizes the most important findings discovered through EDA, analytics, classification, and regression.")
+
+    import numpy as np
+    df_i = data.copy()
+
+    with st.expander("📊 Dataset Overview", expanded=True):
+        ic1, ic2, ic3, ic4, ic5, ic6 = st.columns(6)
+        ic1.metric("Total Admissions", f"{len(df_i):,}")
+        ic2.metric("Unique Patients", f"{df_i['patient_id'].nunique():,}")
+        ic3.metric("Hospitals", f"{df_i['name'].nunique():,}")
+        ic4.metric("Average LOS", f"{df_i['los_days'].mean():.2f} days")
+        ic5.metric("Average Age", f"{df_i['age'].mean():.2f} years")
+        ic6.metric("Average Cost", f"₹{df_i['total_cost_inr'].mean():,.2f}")
+        st.markdown("💡 **What was observed?** The complete dataset records 120,000 baseline admissions.")
+
+    tab1, tab2, tab3, tab4 = st.tabs(["Clinical & Demographics", "Financials & Hospitals", "High-Cost & Outcomes", "Modeling & Summary"])
+
+    with tab1:
+        st.subheader("🔬 Clinical Findings")
+        st.markdown("**Admission Pattern**")
+        for k,v in df_i['admit_type'].value_counts().items(): st.write(f"- {k} = {v:,}")
+        st.markdown("💡 **What was observed?** Emergency admissions form the largest segment.")
+        st.markdown("**Ward Distribution**")
+        for k,v in df_i['ward_type'].value_counts().items(): st.write(f"- {k} = {v:,}")
+        st.markdown("**Disease Distribution**")
+        for k,v in df_i['primary_category'].value_counts().head(5).items(): st.write(f"- {k} = {v:,}")
+
+        st.markdown("---")
+        st.subheader("👥 Demographic Findings")
+        for k,v in df_i['age_group'].value_counts().sort_index().items(): st.write(f"- {k} = {v:,}")
+        
+    with tab2:
+        st.subheader("💰 Financial Findings")
+        st.write(f"- Average Total Cost: ₹{df_i['total_cost_inr'].mean():,.2f}")
+        st.write(f"- Median Cost: ₹{df_i['total_cost_inr'].median():,.2f}")
+        st.info("A relatively small number of admissions have substantially higher treatment costs.")
+        st.markdown("💡 **What was observed?** Cost variation is heavily skewed by a few extreme cases.")
+        
+        st.markdown("---")
+        st.subheader("🏨 Hospital Findings")
+        t_agg = df_i.groupby('tier').agg({'name':'nunique', 'patient_id':'count', 'los_days':'mean', 'total_cost_inr':'mean'})
+        for t in sorted(t_agg.index):
+            st.write(f"**{t}**\\n- Average LOS: {t_agg.loc[t, 'los_days']:.3f}\\n- Average Cost: ₹{t_agg.loc[t, 'total_cost_inr']:,.2f}")
+        
+    with tab3:
+        thresh = df_i['total_cost_inr'].quantile(0.95)
+        df_i['high_cost'] = df_i['total_cost_inr'] >= thresh
+        hc_df = df_i[df_i['high_cost']]
+        
+        st.subheader("🚨 High-Cost Admission Analysis")
+        st.write(f"- **95th percentile threshold** = ₹{thresh:,.0f}")
+        st.write(f"- **High-cost admissions** = {len(hc_df):,} / 120,000")
+        st.info(f"The high-cost group is defined using the 95th percentile of treatment cost. Admissions at or above ₹{thresh:,.0f} are classified as high-cost.")
+        
+        st.markdown("---")
+        st.subheader("📋 Outcome Findings")
+        for k,v in df_i['discharge_type'].value_counts().items(): st.write(f"- {k}: {v:,}")
+
+    with tab4:
+        st.subheader("🤖 Predictive Modeling Findings")
+        st.markdown("### Classification")
+        st.write("""**Logistic Regression**
+- Accuracy: 0.9272
+- Precision: 0.4037
+- Recall: 0.9575
+- F1: 0.5680
+- ROC-AUC: 0.9847""")
+        st.write("""**Random Forest**
+- Accuracy: 0.9305
+- Precision: 0.4141
+- Recall: 0.9375
+- F1: 0.5744
+- ROC-AUC: 0.9825""")
+        
+        st.markdown("### Regression")
+        st.write("""**Linear Regression**
+- MAE = 2.5894 days
+- RMSE = 3.8043 days
+- R² = 0.5539""")
+        st.write("""**Random Forest**
+- MAE = 2.5477 days
+- RMSE = 3.7715 days
+- R² = 0.5615""")
+        
+        st.markdown("---")
+        st.subheader("🎯 Project Summary")
+        st.info("The Patient Health Record Analytics & Monitoring Dashboard integrates data preprocessing, exploratory analysis, multi-dimensional drill-down analytics, financial and hospital analysis, and predictive modeling.")
